@@ -1,11 +1,11 @@
 # Collatz tracker
 
-**Live page: https://christophermayes.github.io/collatz_tracker/**
+**Live page:** [christophermayes.github.io/collatz_tracker](https://christophermayes.github.io/collatz_tracker/)
 
 This page draws the Collatz conjecture tree in the browser in real time, continuously adding new paths so the picture never stops changing.
 It reproduces the style of the figure by Dmitry Kobak that illustrates the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture) article on Wikipedia.
 
-![Reference figure by Dmitry Kobak (CC0)](https://upload.wikimedia.org/wikipedia/commons/8/8f/Collatz_conjecture_tree_visualization.png)
+![Reference figure by Dmitry Kobak (CC0)](images/kobak_reference.png)
 
 *Reference figure: [Collatz conjecture tree visualization](https://commons.wikimedia.org/wiki/File:Collatz_conjecture_tree_visualization.png) by Dmitry Kobak, CC0 1.0.*
 
@@ -21,11 +21,28 @@ The drawing rules follow the reference figure:
 
 - Starting values are random integers below 1,000,000.
 - Each path is drawn outward from the root at 1, turning left by 8.65° into an even number and right by 16° into an odd number.
-- The length of each edge is `1 / ln(n)`, where `n` is the node of the edge farther from the root.
+- The length of each edge is `1 / log(n)`, where `n` is the node of the edge farther from the root.
 - The color and thickness of each edge depend linearly on `log1p` of the number of paths that traverse it, using the magma colormap: rarely used edges are thin and light, and the shared trunk is thick and dark.
 
-The page adds 10 random paths per animation frame and keeps the 5,000 most recent.
+By default, the page adds 10 random paths per animation frame and keeps the 5,000 most recent.
 Once that window is full, each new path replaces the oldest one, so the trunk remains stable while the outer branches change continuously.
+
+## Parameters
+
+The Parameters panel on the page has a slider and a text box for each setting. The Reset button restores the values of the reference figure.
+
+| Parameter | Default | Effect |
+| --- | --- | --- |
+| Even turn (deg) | 8.65 | Left turn into an even number. |
+| Odd turn (deg) | 16 | Right turn into an odd number. |
+| Max start | 1,000,000 | Upper bound for random starting values, up to 10⁹. |
+| Paths shown | 5,000 | Number of most recent paths kept in the tree. |
+| New paths per frame | 10 | Rate at which new paths are added. Zero pauses the animation. |
+| Min line width (px) | 0.4 | Width of the least traversed edges. |
+| Max line width (px) | 7.4 | Width of the most traversed edges. |
+
+Changing a turn angle redraws all current paths with the new geometry.
+Paths whose values would exceed 2⁵³, the largest integer a JavaScript number represents exactly, are skipped; below 10⁹ this affects very few starting values.
 
 ## Implementation
 
@@ -36,7 +53,8 @@ A new starting value therefore only adds the few segments needed to reach a node
 Every frame, the edges are grouped into 48 levels by traversal count and drawn from the lightest level to the darkest.
 
 - [src/collatz.ts](src/collatz.ts) maintains the tree, the cached geometry, and the edge traversal counts.
-- [src/main.ts](src/main.ts) handles the animation loop, the colormap, and the drawing. The constants at the top of this file control the window size, the rate of new paths, the range of starting values, and the number of levels.
+- [src/controls.ts](src/controls.ts) builds the slider and text box for each parameter.
+- [src/main.ts](src/main.ts) handles the parameters, the animation loop, the colormap, and the drawing.
 
 ## Local development
 

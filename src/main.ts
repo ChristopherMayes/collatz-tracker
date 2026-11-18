@@ -1,8 +1,28 @@
 import { CollatzTree } from './collatz';
+import { addControls, type ParamSpec } from './controls';
 
-const MAX_START = 1_000_000;
-const WINDOW = 5000;
-const PATHS_PER_FRAME = 10;
+// Values from the reference figure by Dmitry Kobak.
+const DEFAULTS = {
+  evenAngle: 8.65,
+  oddAngle: 16,
+  maxStart: 1_000_000,
+  window: 5000,
+  pathsPerFrame: 10,
+  minWidth: 0.4,
+  maxWidth: 7.4,
+};
+type Key = keyof typeof DEFAULTS;
+
+const SPECS: ParamSpec<Key>[] = [
+  { key: 'evenAngle', label: 'Even turn (deg)', min: 0, max: 45, step: 0.05 },
+  { key: 'oddAngle', label: 'Odd turn (deg)', min: 0, max: 45, step: 0.05 },
+  { key: 'maxStart', label: 'Max start', min: 10, max: 1_000_000_000, step: 1, log: true },
+  { key: 'window', label: 'Paths shown', min: 100, max: 20_000, step: 100 },
+  { key: 'pathsPerFrame', label: 'New paths per frame', min: 0, max: 100, step: 1 },
+  { key: 'minWidth', label: 'Min line width (px)', min: 0.1, max: 5, step: 0.1 },
+  { key: 'maxWidth', label: 'Max line width (px)', min: 0.5, max: 20, step: 0.1 },
+];
+
 const BINS = 48;
 const PADDING = 0.05;
 
@@ -20,18 +40,33 @@ function magma(t: number): [number, number, number] {
   return [0, 1, 2].map((k) => Math.round(a[k] + f * (b[k] - a[k]))) as [number, number, number];
 }
 
+const params = { ...DEFAULTS };
+
 // Bin 0 is the rarest edge (thin, light); the last bin is the trunk (thick, black).
-const binStyles = Array.from({ length: BINS }, (_, b) => {
-  const t = b / (BINS - 1);
-  const [r, g, bl] = magma(0.85 * (1 - t));
-  return { color: `rgba(${r},${g},${bl},${0.5 + 0.5 * t})`, width: 0.4 + 7 * t };
-});
+const binStyles = () =>
+  Array.from({ length: BINS }, (_, b) => {
+    const t = b / (BINS - 1);
+    const [r, g, bl] = magma(0.85 * (1 - t));
+    return {
+      color: `rgba(${r},${g},${bl},${0.5 + 0.5 * t})`,
+      width: params.minWidth + (params.maxWidth - params.minWidth) * t,
+    };
+  });
+let styles = binStyles();
 
 const canvas = document.querySelector('canvas')!;
 const ctx = canvas.getContext('2d')!;
 const hud = document.getElementById('hud')!;
-const tree = new CollatzTree(WINDOW);
+const tree = new CollatzTree(params.window, params.evenAngle, params.oddAngle);
 const view = { cx: 0, cy: 0, scale: 0 };
+let anglesChanged = false;
+
+const setParams = addControls(document.getElementById('params')!, SPECS, params, (key) => {
+  if (key === 'evenAngle' || key === 'oddAngle') anglesChanged = true;
+  else if (key === 'window') tree.setMaxPaths(params.window);
+  else if (key === 'minWidth' || key === 'maxWidth') styles = binStyles();
+});
+document.getElementById('reset')!.addEventListener('click', () => setParams(DEFAULTS));
 
 function resize(): void {
   const dpr = window.devicePixelRatio || 1;
@@ -45,8 +80,13 @@ let lastTime = performance.now();
 let fps = 0;
 
 function frame(now: number): void {
-  for (let i = 0; i < PATHS_PER_FRAME; i++) {
-    tree.add(2 + Math.floor(Math.random() * (MAX_START - 2)));
+  // Rebuilding once per frame keeps slider drags responsive.
+  if (anglesChanged) {
+    tree.setAngles(params.evenAngle, params.oddAngle);
+    anglesChanged = false;
+  }
+  for (let i = 0; i < params.pathsPerFrame; i++) {
+    tree.add(2 + Math.floor(Math.random() * (params.maxStart - 2)));
   }
 
   const logMax = Math.log1p(Math.max(tree.pathCount, 1));
@@ -88,8 +128,8 @@ function frame(now: number): void {
       ctx.moveTo(segs[i], segs[i + 1]);
       ctx.lineTo(segs[i + 2], segs[i + 3]);
     }
-    ctx.strokeStyle = binStyles[b].color;
-    ctx.lineWidth = (binStyles[b].width * dpr) / view.scale;
+    ctx.strokeStyle = styles[b].color;
+    ctx.lineWidth = (styles[b].width * dpr) / view.scale;
     ctx.stroke();
   }
 
