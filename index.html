@@ -11,13 +11,18 @@
         position: fixed; left: 1rem; bottom: 1rem;
         font: 14px Georgia, serif; color: #b5367a;
       }
-      #controls {
+      #panel {
         position: fixed; top: 1rem; right: 1rem; max-width: calc(100vw - 2rem);
-        padding: 0.5rem 0.75rem; border-radius: 6px;
-        background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem;
         font: 13px system-ui, sans-serif; color: #333;
       }
-      #controls summary { cursor: pointer; font-weight: 600; }
+      #panel details {
+        padding: 0.5rem 0.75rem; border-radius: 6px;
+        background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      }
+      #panel summary { cursor: pointer; font-weight: 600; }
+      #panel a { color: #812581; }
+      #about p { max-width: 22rem; margin: 0.5rem 0; line-height: 1.4; }
       #params {
         display: grid; grid-template-columns: auto 9rem 6rem;
         gap: 0.35rem 0.5rem; align-items: center; margin: 0.5rem 0;
@@ -28,11 +33,26 @@
   <body>
     <canvas></canvas>
     <div id="hud"></div>
-    <details id="controls" open>
-      <summary>Parameters</summary>
-      <div id="params"></div>
-      <button id="reset" type="button">Reset to reference values</button>
-    </details>
+    <div id="panel">
+      <details id="controls" open>
+        <summary>Parameters</summary>
+        <div id="params"></div>
+        <button id="reset" type="button">Reset to reference values</button>
+      </details>
+      <details id="about">
+        <summary>About</summary>
+        <p>
+          Each line is a path of the <a href="https://en.wikipedia.org/wiki/Collatz_conjecture">Collatz map</a>
+          from a random starting value down to 1, drawn outward from 1 with a left turn at each even number and a right turn at each odd number.
+          Edges shared by more paths are drawn thicker and darker.
+          New paths are added continuously, and the oldest are removed.
+        </p>
+        <p>
+          The style follows the <a href="https://commons.wikimedia.org/wiki/File:Collatz_conjecture_tree_visualization.png">figure by Dmitry Kobak</a> on Wikipedia.
+        </p>
+        <p>Source code: <a href="https://github.com/ChristopherMayes/collatz-tracker">github.com/ChristopherMayes/collatz-tracker</a></p>
+      </details>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

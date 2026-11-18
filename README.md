@@ -1,6 +1,6 @@
 # Collatz tracker
 
-**Live page:** [christophermayes.github.io/collatz_tracker](https://christophermayes.github.io/collatz_tracker/)
+**Live page:** [christophermayes.github.io/collatz-tracker](https://christophermayes.github.io/collatz-tracker/)
 
 This page draws the Collatz conjecture tree in the browser in real time, continuously adding new paths so the picture never stops changing.
 It reproduces the style of the figure by Dmitry Kobak that illustrates the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture) article on Wikipedia.
